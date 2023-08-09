@@ -12,6 +12,7 @@
 int delete_file(char *filepath);
 int delete_directory(char *filepath);
 int get_file_type(char *filepath);
+void take_action(char *filepath);
 
 int main(int argc, char **argv)
 {
@@ -21,20 +22,25 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    switch (get_file_type(argv[1]))
-    {
-    case FILE_TYPE:
-        delete_file(argv[1]);
-        break;
-    case DIRECTORY_TYPE:
-        delete_directory(argv[1]);
-        break;
-    default:
-        fprintf(stderr, "Invalid file type: %s\n", argv[1]);
-        exit(1);
-    }
+    take_action(argv[1]);
 
     exit(0);
+}
+
+void take_action(char *filepath)
+{
+    switch (get_file_type(filepath))
+    {
+    case FILE_TYPE:
+        delete_file(filepath);
+        break;
+    case DIRECTORY_TYPE:
+        delete_directory(filepath);
+        break;
+    default:
+        fprintf(stderr, "Invalid file type: %s\n", filepath);
+        exit(1);
+    }
 }
 
 // Returns 0 on success
@@ -108,6 +114,7 @@ int delete_directory(char *filepath)
 {
     DIR *directory;
     struct dirent *directory_obj;
+    char fullpath[2048];
 
     // Check if directory exists
     if ((directory = opendir(filepath)) == NULL)
@@ -118,8 +125,13 @@ int delete_directory(char *filepath)
 
     while ((directory_obj = readdir(directory)) != NULL)
     {
-        // If file, call delete_file
-        // If folder, call delete_folder
+        if (strcmp(directory_obj->d_name, ".") == 0 || strcmp(directory_obj->d_name, "..") == 0)
+        {
+            continue;
+        }
+
+        snprintf(fullpath, sizeof(fullpath), "%s/%s", filepath, directory_obj->d_name);
+        take_action(fullpath);
     }
 
     closedir(directory);
