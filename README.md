@@ -10,21 +10,13 @@ Verification occurs after each pass.
 
 ## Installation
 `
-git clone https://github.com/JoshCap20/Secure-Delete.git && cd Secure-Delete && gcc -o erase secure_delete.c
+git clone https://github.com/JoshCap20/Secure-Delete.git && cd Secure-Delete && source setup.sh
 `
+* This will add an alias for `erase` to the shell's global scope.
 
 
 ## Usage
-`./erase <path-to-file-or-directory>`
-
-* Will only work from directory with erase, see suggestion for global usage.
-
-## Suggestion
-Create an alias in your shell configuration file to 'erase' and then just use `erase <relative-path-to-file-or-directory>`
-* For ZSH shells, add `alias erase="ABSOLUTE_FILE_PATH/erase"` to ~/.zshrc
-* For Bash shells, add above to ~/.bashrc
-
-* Not sure what shell? Run `echo $0` or `echo $SHELL`
+`erase <path-to-file-or-directory>`
 
 ## Military and Security Standards Met:
 - DoD 5220.22-M
