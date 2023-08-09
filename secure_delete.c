@@ -8,6 +8,7 @@
 
 #define FILE_TYPE 1
 #define DIRECTORY_TYPE 2
+#define PATH_MAX 4096
 
 static void take_action(char *filepath);
 static int overwrite_file(char *filepath);
@@ -20,7 +21,7 @@ int main(int argc, char **argv)
 {
     if (argc != 2)
     {
-        fprintf(stderr, "This command only accepts one arguments.\n");
+        handle_error("This command only accepts one arguments.", NULL);
         exit(1);
     }
 
@@ -132,7 +133,7 @@ static int delete_directory(char *filepath)
 {
     DIR *directory;
     struct dirent *directory_obj;
-    char fullpath[2048];
+    char fullpath[PATH_MAX];
 
     // Check if directory exists
     if ((directory = opendir(filepath)) == NULL)
