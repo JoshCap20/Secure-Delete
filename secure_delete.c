@@ -64,6 +64,7 @@ static int overwrite_file(char *filepath)
 {
     FILE *file;
     long file_size;
+    char *overwrite_value;
 
     // Check if file exists
     if (!(file = fopen(filepath, "rb+")))
@@ -90,8 +91,7 @@ static int overwrite_file(char *filepath)
     fseek(file, 0, SEEK_SET);
 
     // Replace file contents
-    char *overwrite_value = malloc(file_size);
-    if (!overwrite_value)
+    if (!(overwrite_value = malloc(file_size)))
     {
         handle_error("Failed to allocate memory for overwrite", filepath);
         free(overwrite_value);
@@ -110,7 +110,7 @@ static int overwrite_file(char *filepath)
     }
 
     // Pass 2: Overwrite with binary ones
-    memset(overwrite_value, 0xFF, file_size); 
+    memset(overwrite_value, 0xFF, file_size);
     if (!fwrite(overwrite_value, file_size, 1, file))
     {
         handle_error("Error overwriting file", filepath);
@@ -135,7 +135,7 @@ static int overwrite_file(char *filepath)
     // Clear resources
     free(overwrite_value);
     fclose(file);
-    
+
     return 0;
 }
 
