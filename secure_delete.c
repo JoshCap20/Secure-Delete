@@ -94,6 +94,8 @@ static int overwrite_file(char *filepath)
     if (!overwrite_value)
     {
         handle_error("Failed to allocate memory for overwrite", filepath);
+        free(overwrite_value);
+        fclose(file);
         return 1;
     }
 
@@ -102,6 +104,8 @@ static int overwrite_file(char *filepath)
     if (!fwrite(overwrite_value, file_size, 1, file))
     {
         handle_error("Error overwriting file", filepath);
+        free(overwrite_value);
+        fclose(file);
         return 1;
     }
 
@@ -110,6 +114,8 @@ static int overwrite_file(char *filepath)
     if (!fwrite(overwrite_value, file_size, 1, file))
     {
         handle_error("Error overwriting file", filepath);
+        free(overwrite_value);
+        fclose(file);
         return 1;
     }
 
@@ -121,6 +127,8 @@ static int overwrite_file(char *filepath)
     if (!fwrite(overwrite_value, file_size, 1, file))
     {
         handle_error("Error overwriting file", filepath);
+        free(overwrite_value);
+        fclose(file);
         return 1;
     }
 
