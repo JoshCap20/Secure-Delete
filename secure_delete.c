@@ -143,7 +143,8 @@ static int delete_file(char *filepath)
 {
     if (overwrite_file(filepath))
     {
-        return 1;
+        handle_error("Terminating program, unable to overwrite", filepath);
+        exit(1);
     }
 
     if (remove(filepath))
