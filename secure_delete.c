@@ -9,10 +9,12 @@
 #define FILE_TYPE 1
 #define DIRECTORY_TYPE 2
 
-int delete_file(char *filepath);
-int delete_directory(char *filepath);
-int get_file_type(char *filepath);
-void take_action(char *filepath);
+static void take_action(char *filepath);
+static int overwrite_file(char *filepath);
+static int delete_file(char *filepath);
+static int delete_directory(char *filepath);
+static int get_file_type(char *filepath);
+static void handle_error(const char *message, const char *filepath);
 
 int main(int argc, char **argv)
 {
@@ -27,7 +29,20 @@ int main(int argc, char **argv)
     exit(0);
 }
 
-void take_action(char *filepath)
+static void handle_error(const char *message, const char *filepath)
+{
+    if (filepath)
+    {
+        fprintf(stderr, "%s: %s\n", message, filepath);
+    }
+    else
+    {
+        fprintf(stderr, "%s\n", message);
+    }
+    exit(1);
+}
+
+static void take_action(char *filepath)
 {
     switch (get_file_type(filepath))
     {
@@ -38,13 +53,13 @@ void take_action(char *filepath)
         delete_directory(filepath);
         break;
     default:
-        fprintf(stderr, "Invalid file type: %s\n", filepath);
+        handle_error("Invalid file type", filepath);
         exit(1);
     }
 }
 
 // Returns 0 on success
-int overwrite_file(char *filepath)
+static int overwrite_file(char *filepath)
 {
     FILE *file;
     long file_size;
@@ -52,7 +67,7 @@ int overwrite_file(char *filepath)
     // Check if file exists
     if ((file = fopen(filepath, "rb+")) == NULL)
     {
-        fprintf(stderr, "File does not exist: %s\n", filepath);
+        handle_error("File does not exist", filepath);
         return 1;
     }
 
@@ -61,13 +76,13 @@ int overwrite_file(char *filepath)
 
     if ((file_size = ftell(file)) == -1L)
     {
-        fprintf(stderr, "Error determining size of %s\n", filepath);
+        handle_error("Error determining file size", filepath);
         fclose(file);
         return 1;
     }
     else if (!file_size)
     {
-        fprintf(stderr, "Invalid file size.\n");
+        handle_error("Invalid file size", filepath);
         fclose(file);
         return 1;
     }
@@ -77,7 +92,7 @@ int overwrite_file(char *filepath)
     char *overwrite_value = malloc(file_size);
     if (!overwrite_value)
     {
-        fprintf(stderr, "Failed to allocate memory.\n");
+        handle_error("Failed to allocate memory for overwrite", filepath);
         return 1;
     }
     memset(overwrite_value, 0, file_size);
@@ -90,27 +105,30 @@ int overwrite_file(char *filepath)
     // Verify file update
     if (overwrite_size != 1)
     {
-        fprintf(stderr, "Error writing to file: %s\n", filepath);
+        handle_error("Error overwriting file", filepath);
         return 1;
     }
     return 0;
 }
 
-int delete_file(char *filepath)
+static int delete_file(char *filepath)
 {
-    if (overwrite_file(filepath) == 0)
+    if (overwrite_file(filepath))
     {
-        // Successful overwrite
-        remove(filepath);
-        fprintf(stdout, "File deleted successfully: %s\n", filepath);
-        return 0;
+        return 1;
     }
 
-    fprintf(stderr, "Error deleting file: %s\n", filepath);
-    return 1;
+    if (remove(filepath))
+    {
+        handle_error("Error deleting file", filepath);
+        return 1;
+    }
+
+    printf("File deleted successfully: %s\n", filepath);
+    return 0;
 }
 
-int delete_directory(char *filepath)
+static int delete_directory(char *filepath)
 {
     DIR *directory;
     struct dirent *directory_obj;
@@ -119,7 +137,7 @@ int delete_directory(char *filepath)
     // Check if directory exists
     if ((directory = opendir(filepath)) == NULL)
     {
-        fprintf(stderr, "Invalid directory: %s\n", filepath);
+        handle_error("Invalid directory", filepath);
         return 1;
     }
 
@@ -137,9 +155,9 @@ int delete_directory(char *filepath)
     closedir(directory);
 
     // Remove directory now
-    if (rmdir(filepath) != 0)
+    if (rmdir(filepath))
     {
-        fprintf(stderr, "Error deleting directory: %s\n", filepath);
+        handle_error("Error deleting directory", filepath);
         return 1;
     }
 
@@ -147,7 +165,7 @@ int delete_directory(char *filepath)
     return 0;
 }
 
-int get_file_type(char *filepath)
+static int get_file_type(char *filepath)
 {
     struct stat file_info;
     if (stat(filepath, &file_info) == 0)
