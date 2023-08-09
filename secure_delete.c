@@ -66,7 +66,7 @@ static int overwrite_file(char *filepath)
     long file_size;
 
     // Check if file exists
-    if ((file = fopen(filepath, "rb+")) == NULL)
+    if (!(file = fopen(filepath, "rb+")))
     {
         handle_error("File does not exist", filepath);
         return 1;
@@ -96,19 +96,38 @@ static int overwrite_file(char *filepath)
         handle_error("Failed to allocate memory for overwrite", filepath);
         return 1;
     }
+
+    // Pass 1: Overwrite with zeros
     memset(overwrite_value, 0, file_size);
-    size_t overwrite_size = fwrite(overwrite_value, file_size, 1, file);
-
-    // Clear resources
-    free(overwrite_value);
-    fclose(file);
-
-    // Verify file update
-    if (overwrite_size != 1)
+    if (!fwrite(overwrite_value, file_size, 1, file))
     {
         handle_error("Error overwriting file", filepath);
         return 1;
     }
+
+    // Pass 2: Overwrite with binary ones
+    memset(overwrite_value, 0xFF, file_size); 
+    if (!fwrite(overwrite_value, file_size, 1, file))
+    {
+        handle_error("Error overwriting file", filepath);
+        return 1;
+    }
+
+    // Pass 3: Overwrite with random data
+    for (long i = 0; i < file_size; i++)
+    {
+        overwrite_value[i] = (char)rand();
+    }
+    if (!fwrite(overwrite_value, file_size, 1, file))
+    {
+        handle_error("Error overwriting file", filepath);
+        return 1;
+    }
+
+    // Clear resources
+    free(overwrite_value);
+    fclose(file);
+    
     return 0;
 }
 
@@ -136,13 +155,13 @@ static int delete_directory(char *filepath)
     char fullpath[PATH_MAX];
 
     // Check if directory exists
-    if ((directory = opendir(filepath)) == NULL)
+    if (!(directory = opendir(filepath)))
     {
         handle_error("Invalid directory", filepath);
         return 1;
     }
 
-    while ((directory_obj = readdir(directory)) != NULL)
+    while ((directory_obj = readdir(directory)))
     {
         if (strcmp(directory_obj->d_name, ".") == 0 || strcmp(directory_obj->d_name, "..") == 0)
         {
@@ -169,7 +188,7 @@ static int delete_directory(char *filepath)
 static int get_file_type(char *filepath)
 {
     struct stat file_info;
-    if (stat(filepath, &file_info) == 0)
+    if (!stat(filepath, &file_info))
     {
         if (S_ISREG(file_info.st_mode))
         {
